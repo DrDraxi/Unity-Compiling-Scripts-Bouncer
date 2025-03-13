@@ -1,6 +1,12 @@
 # Unity Compiling Scripts Window Bouncer
 
-This Python script finds Unity compilation windows (containing "Compiling scripts" in their title) and makes them bounce around the screen like the classic DVD screensaver logo.
+This Python script finds Unity compilation windows (containing "Compiling scripts" in their title) and makes them bounce around the screen like the classic DVD screensaver logo. 
+
+When making this I said to myself *"Why fix the long compiling issue when it can bounce instead?"*
+
+## GIF
+
+![Unity Window Bouncer in action](assets/images/bouncer.gif)
 
 ## Features
 
