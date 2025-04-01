@@ -62,7 +62,5 @@ venv.bak/
 *.swo
 
 # Windows specific
-Thumbs.db
-ehthumbs.db
 Desktop.ini 
-compilation_stats.db
+*.db

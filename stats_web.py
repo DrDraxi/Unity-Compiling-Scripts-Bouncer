@@ -38,7 +38,7 @@ def hourly_today():
                 ELSE 0 
             END) as total_seconds,
             SUM(CASE WHEN end_datetime IS NULL THEN 1 ELSE 0 END) as in_progress
-        FROM compilation_windows
+        FROM loading_windows
         WHERE date(start_datetime) = date('now')
         GROUP BY strftime('%H', start_datetime)
         ORDER BY hour
@@ -81,7 +81,7 @@ def daily_trend():
                 ELSE 0 
             END) as total_seconds,
             SUM(CASE WHEN end_datetime IS NULL THEN 1 ELSE 0 END) as in_progress
-        FROM compilation_windows
+        FROM loading_windows
         WHERE start_datetime >= date('now', '-30 days')
         GROUP BY date(start_datetime)
         ORDER BY date

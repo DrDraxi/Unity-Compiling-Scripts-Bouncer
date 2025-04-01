@@ -3,45 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unity Compilation Stats</title>
+    <title>Unity Time Waste Statistics</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        :root {
+            --primary-color: #6c757d;
+            --primary-glow: rgba(108, 117, 125, 0.3);
+            --card-bg: #1a1a1a;
+            --card-border: #2a2a2a;
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --accent-color: #4a90e2;
+            --accent-glow: rgba(74, 144, 226, 0.3);
+        }
+
         body {
-            background-color: #f8f9fa;
+            background-color: #121212;
             padding-top: 20px;
+            color: var(--text-primary);
         }
+
         .card {
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3),
+                        inset 0 0 15px rgba(0, 0, 0, 0.2);
             margin-bottom: 20px;
+            transition: all 0.3s ease;
         }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 30px var(--primary-glow),
+                        inset 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+
         .card-header {
-            background-color: #6c757d;
-            color: white;
-            border-radius: 10px 10px 0 0 !important;
-            padding: 10px 15px;
+            background-color: var(--primary-color);
+            color: var(--text-primary);
+            border-radius: 15px 15px 0 0 !important;
+            padding: 15px 20px;
             font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 10px var(--primary-glow);
         }
+
         .summary-value {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: bold;
-            color: #495057;
+            color: var(--text-primary);
+            text-shadow: 0 0 10px var(--accent-glow);
         }
+
         .summary-label {
-            color: #6c757d;
+            color: var(--text-secondary);
             font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
+
         .chart-container {
             position: relative;
             height: 300px;
             width: 100%;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        hr {
+            border-color: var(--card-border);
+            margin: 15px 0;
+        }
+
+        .table {
+            color: var(--text-primary);
+        }
+
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .table-striped tbody tr:nth-of-type(even) {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: rgba(74, 144, 226, 0.1);
+        }
+
+        .table th {
+            border-color: var(--card-border);
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .table td {
+            border-color: var(--card-border);
+        }
+
+        footer {
+            color: var(--text-secondary);
+        }
+
+        h1 {
+            color: var(--text-primary);
+            text-shadow: 0 0 20px var(--accent-glow);
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--card-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-color);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 class="text-center mb-4">Unity Compilation Statistics</h1>
+        <h1 class="text-center mb-4">Unity Time Waste Statistics</h1>
         
         <div class="row">
             <div class="col-md-4">
@@ -49,7 +147,7 @@
                     <div class="card-header">Today's Stats</div>
                     <div class="card-body text-center">
                         <div class="summary-value" id="today-count">-</div>
-                        <div class="summary-label">Compilations Today</div>
+                        <div class="summary-label">Loadings Today</div>
                         <hr>
                         <div class="summary-value" id="today-time">-</div>
                         <div class="summary-label">Total Time</div>
@@ -61,7 +159,7 @@
                     <div class="card-header">Monthly Stats</div>
                     <div class="card-body text-center">
                         <div class="summary-value" id="month-count">-</div>
-                        <div class="summary-label">Compilations This Month</div>
+                        <div class="summary-label">Loadings This Month</div>
                         <hr>
                         <div class="summary-value" id="month-time">-</div>
                         <div class="summary-label">Total Time</div>
@@ -73,10 +171,10 @@
                     <div class="card-header">Average</div>
                     <div class="card-body text-center">
                         <div class="summary-value" id="avg-daily">-</div>
-                        <div class="summary-label">Average Daily Compilations</div>
+                        <div class="summary-label">Average Daily Loadings</div>
                         <hr>
                         <div class="summary-value" id="avg-duration">-</div>
-                        <div class="summary-label">Average Compilation Duration</div>
+                        <div class="summary-label">Average Loading Duration</div>
                     </div>
                 </div>
             </div>
@@ -108,14 +206,14 @@
         <div class="row mt-4">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header">Recent Compilations</div>
+                    <div class="card-header">Recent Loadings</div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-striped table-hover mb-0">
                                 <thead>
                                     <tr>
                                         <th>Date</th>
-                                        <th>Compilations</th>
+                                        <th>Loadings</th>
                                         <th>Total Time</th>
                                         <th>Avg Time</th>
                                     </tr>
@@ -253,15 +351,15 @@
                     labels: data.hours,
                     datasets: [
                         {
-                            label: 'Number of Compilations',
+                            label: 'Number of Loadings',
                             data: data.counts,
-                            backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                            borderColor: 'rgba(54, 162, 235, 1)',
+                            backgroundColor: 'rgba(74, 144, 226, 0.5)',
+                            borderColor: 'rgba(74, 144, 226, 1)',
                             borderWidth: 1,
                             yAxisID: 'y'
                         },
                         {
-                            label: 'Compilation Time (minutes)',
+                            label: 'Loading Time (minutes)',
                             data: data.durations,
                             backgroundColor: 'rgba(255, 99, 132, 0.5)',
                             borderColor: 'rgba(255, 99, 132, 1)',
@@ -280,7 +378,14 @@
                             position: 'left',
                             title: {
                                 display: true,
-                                text: 'Count'
+                                text: 'Count',
+                                color: '#b3b3b3'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#b3b3b3'
                             }
                         },
                         y1: {
@@ -291,7 +396,26 @@
                             },
                             title: {
                                 display: true,
-                                text: 'Minutes'
+                                text: 'Minutes',
+                                color: '#b3b3b3'
+                            },
+                            ticks: {
+                                color: '#b3b3b3'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#b3b3b3'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#b3b3b3'
                             }
                         }
                     }
@@ -319,7 +443,7 @@
                     labels: formattedDates,
                     datasets: [
                         {
-                            label: 'Compilations',
+                            label: 'Loadings',
                             data: data.counts,
                             backgroundColor: 'rgba(75, 192, 192, 0.2)',
                             borderColor: 'rgba(75, 192, 192, 1)',
@@ -345,7 +469,14 @@
                             position: 'left',
                             title: {
                                 display: true,
-                                text: 'Count'
+                                text: 'Count',
+                                color: '#b3b3b3'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#b3b3b3'
                             }
                         },
                         y1: {
@@ -356,7 +487,26 @@
                             },
                             title: {
                                 display: true,
-                                text: 'Minutes'
+                                text: 'Minutes',
+                                color: '#b3b3b3'
+                            },
+                            ticks: {
+                                color: '#b3b3b3'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#b3b3b3'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#b3b3b3'
                             }
                         }
                     }

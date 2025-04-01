@@ -18,7 +18,7 @@ def main():
     # Track windows we've seen to maintain consistent movement
     tracked_windows = {}
     
-    print("Looking for Unity compilation windows...")
+    print("Looking for Unity loading windows...")
     print("For statistics dashboard, run 'python stats_web.py' in a separate terminal")
     print("Press Ctrl+C to exit")
     
@@ -46,7 +46,7 @@ def main():
                     for window_info in target_windows:
                         hwnd = window_info['hwnd']
                         print(f"Found new window: {hwnd} - {window_info['title']}")
-                        window_id = db_utils.add_compilation_window(window_info['title'])
+                        window_id = db_utils.add_loading_window(window_info['title'])
                         tracked_windows[hwnd] = {
                             'speed_x': base_speed_x * random.uniform(0.8, 1.2),
                             'speed_y': base_speed_y * random.uniform(0.8, 1.2),
@@ -74,14 +74,14 @@ def main():
                         except window_utils.pywintypes.error:
                             # Window is invalid, remove it and mark as ended
                             window_id = tracked_windows[hwnd]['window_id']
-                            db_utils.end_compilation_window(window_id)
+                            db_utils.end_loading_window(window_id)
                             print(f"Window {hwnd} is invalid, removing")
                             del tracked_windows[hwnd]
                             continue
                         except Exception:
                             # Window is invalid, remove it and mark as ended
                             window_id = tracked_windows[hwnd]['window_id']
-                            db_utils.end_compilation_window(window_id)
+                            db_utils.end_loading_window(window_id)
                             print(f"Window {hwnd} caused an error, removing")
                             del tracked_windows[hwnd]
                             continue
@@ -137,13 +137,13 @@ def main():
                     except window_utils.pywintypes.error as e:
                         # Window is invalid, remove it and mark as ended
                         window_id = tracked_windows[hwnd]['window_id']
-                        db_utils.end_compilation_window(window_id)
+                        db_utils.end_loading_window(window_id)
                         print(f"Window {hwnd} caused a pywintypes error, removing: {e}")
                         del tracked_windows[hwnd]
                     except Exception as e:
                         # Window is invalid, remove it and mark as ended
                         window_id = tracked_windows[hwnd]['window_id']
-                        db_utils.end_compilation_window(window_id)
+                        db_utils.end_loading_window(window_id)
                         print(f"Error processing window {hwnd}, removing: {e}")
                         del tracked_windows[hwnd]
                 
@@ -151,7 +151,7 @@ def main():
                 if not tracked_windows:
                     stats = db_utils.get_today_stats()
                     in_progress_text = f" ({stats['in_progress']} in progress)" if stats['in_progress'] > 0 else ""
-                    print(f"\nToday's compilation stats: {stats['count']}{in_progress_text} compilations, total time: {stats['formatted_time']}")
+                    print(f"\nToday's loading stats: {stats['count']}{in_progress_text} loadings, total time: {stats['formatted_time']}")
                     print("For detailed statistics, run 'python stats_web.py' in a separate terminal")
                 
                 time.sleep(update_interval)
