@@ -46,21 +46,40 @@ def get_today_stats():
     cursor = conn.cursor()
     today = datetime.now().date()
     
+    # Count all compilations
     cursor.execute('''
-        SELECT COUNT(*) as count,
-               SUM(strftime('%s', COALESCE(end_datetime, datetime('now'))) - strftime('%s', start_datetime)) as total_seconds
+        SELECT COUNT(*) 
         FROM compilation_windows
         WHERE date(start_datetime) = date('now')
     ''')
+    count = cursor.fetchone()[0] or 0
     
-    result = cursor.fetchone()
+    # Calculate time only for completed compilations
+    cursor.execute('''
+        SELECT 
+            SUM(CASE 
+                WHEN end_datetime IS NOT NULL 
+                THEN strftime('%s', end_datetime) - strftime('%s', start_datetime)
+                ELSE 0 
+            END) as total_seconds
+        FROM compilation_windows
+        WHERE date(start_datetime) = date('now')
+    ''')
+    total_seconds = cursor.fetchone()[0] or 0
+    
+    # Get count of in-progress compilations
+    cursor.execute('''
+        SELECT COUNT(*) 
+        FROM compilation_windows
+        WHERE date(start_datetime) = date('now') AND end_datetime IS NULL
+    ''')
+    in_progress = cursor.fetchone()[0] or 0
+    
     conn.close()
-    
-    count = result[0] or 0
-    total_seconds = result[1] or 0
     
     return {
         'count': count,
+        'in_progress': in_progress,
         'total_seconds': total_seconds,
         'formatted_time': f"{total_seconds // 60}m {total_seconds % 60}s"
     }
@@ -73,7 +92,12 @@ def get_last_10_days_stats():
         SELECT 
             date(start_datetime) as date,
             COUNT(*) as count,
-            SUM(strftime('%s', COALESCE(end_datetime, datetime('now'))) - strftime('%s', start_datetime)) as total_seconds
+            SUM(CASE 
+                WHEN end_datetime IS NOT NULL 
+                THEN strftime('%s', end_datetime) - strftime('%s', start_datetime)
+                ELSE 0 
+            END) as total_seconds,
+            SUM(CASE WHEN end_datetime IS NULL THEN 1 ELSE 0 END) as in_progress
         FROM compilation_windows
         WHERE start_datetime >= date('now', '-10 days')
         GROUP BY date(start_datetime)
@@ -87,6 +111,7 @@ def get_last_10_days_stats():
         'date': row[0],
         'count': row[1],
         'total_seconds': row[2] or 0,
+        'in_progress': row[3] or 0,
         'formatted_time': f"{(row[2] or 0) // 60}m {(row[2] or 0) % 60}s"
     } for row in results]
 
@@ -97,7 +122,12 @@ def get_current_month_stats():
     cursor.execute('''
         SELECT 
             COUNT(*) as count,
-            SUM(strftime('%s', COALESCE(end_datetime, datetime('now'))) - strftime('%s', start_datetime)) as total_seconds
+            SUM(CASE 
+                WHEN end_datetime IS NOT NULL 
+                THEN strftime('%s', end_datetime) - strftime('%s', start_datetime)
+                ELSE 0 
+            END) as total_seconds,
+            SUM(CASE WHEN end_datetime IS NULL THEN 1 ELSE 0 END) as in_progress
         FROM compilation_windows
         WHERE strftime('%Y-%m', start_datetime) = strftime('%Y-%m', 'now')
     ''')
@@ -107,9 +137,11 @@ def get_current_month_stats():
     
     count = result[0] or 0
     total_seconds = result[1] or 0
+    in_progress = result[2] or 0
     
     return {
         'count': count,
+        'in_progress': in_progress,
         'total_seconds': total_seconds,
         'formatted_time': f"{total_seconds // 60}m {total_seconds % 60}s"
     } 

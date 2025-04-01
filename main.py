@@ -150,7 +150,8 @@ def main():
                 # Show today's stats if we have no tracked windows
                 if not tracked_windows:
                     stats = db_utils.get_today_stats()
-                    print(f"\nToday's compilation stats: {stats['count']} compilations, total time: {stats['formatted_time']}")
+                    in_progress_text = f" ({stats['in_progress']} in progress)" if stats['in_progress'] > 0 else ""
+                    print(f"\nToday's compilation stats: {stats['count']}{in_progress_text} compilations, total time: {stats['formatted_time']}")
                     print("For detailed statistics, run 'python stats_web.py' in a separate terminal")
                 
                 time.sleep(update_interval)
