@@ -113,6 +113,52 @@ def daily_trend():
         "in_progress": [d["in_progress"] for d in days_data.values()]
     })
 
+@app.route('/api/loading_text_stats')
+def loading_text_stats():
+    conn = db_utils.sqlite3.connect(db_utils.DB_PATH)
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        SELECT 
+            rtrim(
+                rtrim(
+                    rtrim(
+                        rtrim(
+                            CASE 
+                                WHEN window_title LIKE '%(busy for%' 
+                                THEN substr(window_title, 1, instr(window_title, '(busy for') - 1)
+                                ELSE window_title 
+                            END,
+                            '...'
+                        ),
+                        '.'
+                    ),
+                    ' '
+                ),
+                '_'
+            ) as clean_text,
+            COUNT(*) as count,
+            SUM(CASE 
+                WHEN end_datetime IS NOT NULL 
+                THEN strftime('%s', end_datetime) - strftime('%s', start_datetime)
+                ELSE 0 
+            END) as total_seconds,
+            SUM(CASE WHEN end_datetime IS NULL THEN 1 ELSE 0 END) as in_progress
+        FROM loading_windows
+        GROUP BY clean_text
+        ORDER BY count DESC
+    ''')
+    
+    results = cursor.fetchall()
+    conn.close()
+    
+    return jsonify([{
+        'text': row[0],
+        'count': row[1],
+        'total_seconds': row[2] or 0,
+        'in_progress': row[3] or 0
+    } for row in results])
+
 def open_browser():
     """Open the browser after a short delay"""
     def _open_browser():
